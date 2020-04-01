@@ -1,10 +1,13 @@
-package org.ll.auth_spring_boot_starter.config;
+package org.ll.auth.config;
 
 import java.util.List;
 
-import org.ll.auth_spring_boot_starter.model.UserDetailProperties;
-import org.ll.auth_spring_boot_starter.provider.CustomUserDetailsService;
-import org.ll.auth_spring_boot_starter.provider.UserPasswordProvider;
+import org.ll.auth.model.AuthorizeReqProperties;
+import org.ll.auth.model.MatcherProperties;
+import org.ll.auth.model.UserDetailProperties;
+import org.ll.auth.provider.CustomUserDetailsService;
+import org.ll.auth.provider.UserPasswordProvider;
+import org.ll.auth.util.AntMatcherUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,10 +92,24 @@ public class AuthConfig  extends WebSecurityConfigurerAdapter{
 		log.debug("init BCryptPasswordEncoder begin");
 		return new BCryptPasswordEncoder();
 	}
+	
+	@Bean
+	@ConfigurationProperties("security.auth.authorize-request")
+	@Nullable
+	public AuthorizeReqProperties authorizeReqProperties(){
+		return new AuthorizeReqProperties();
+	}
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		super.configure(http);
+//		super.configure(http);
+		AuthorizeReqProperties authorizeReqProperties = authorizeReqProperties();
+		if(authorizeReqProperties != null && authorizeReqProperties.getMatchers()!=null){
+			http
+				.requestMatchers().antMatchers(AntMatcherUtil.resolvePatterns(authorizeReqProperties))
+				;
+			AntMatcherUtil.setAuthorizeRequests(http.authorizeRequests(), authorizeReqProperties);
+		}
 		http
 				.csrf().ignoringAntMatchers("/login**")
 			.and()

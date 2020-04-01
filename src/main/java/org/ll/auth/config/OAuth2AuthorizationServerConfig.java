@@ -1,8 +1,8 @@
-package org.ll.auth_spring_boot_starter.config;
+package org.ll.auth.config;
 
 import java.util.stream.Collectors;
 
-import org.ll.auth_spring_boot_starter.model.Oauth2ClientDetailsProperties;
+import org.ll.auth.model.Oauth2ClientDetailsProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenCo
 public class OAuth2AuthorizationServerConfig extends WebSecurityConfigurerAdapter {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OAuth2AuthorizationServerConfig.class);
-	private boolean isDebug = LOG.isDebugEnabled();
+	private final static boolean isDebug = LOG.isDebugEnabled();
 	
 	
 	@Configuration
@@ -57,8 +57,6 @@ public class OAuth2AuthorizationServerConfig extends WebSecurityConfigurerAdapte
 		public Oauth2ClientDetailsProperties oauth2ClientDetailsProperties(){
 			return new Oauth2ClientDetailsProperties();
 		}
-		
-		
 
 		@Override
 		public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
@@ -69,6 +67,9 @@ public class OAuth2AuthorizationServerConfig extends WebSecurityConfigurerAdapte
 				protected ClientDetailsService performBuild() {
 					InMemoryClientDetailsService clientDetailsService = new InMemoryClientDetailsService();
 					
+					if(isDebug){
+						LOG.debug("oauth2ClientDetailsProperties().getClients():" + oauth2ClientDetailsProperties().getClients());
+					}
 					clientDetailsService.setClientDetailsStore(
 							oauth2ClientDetailsProperties().getClients() 
 							.stream()
@@ -85,6 +86,9 @@ public class OAuth2AuthorizationServerConfig extends WebSecurityConfigurerAdapte
 			endpoints
 					.tokenStore(tokenStore)
 					.accessTokenConverter(tokenConverter)
+					
+//					.tokenEnhancer(tokenEnhancer)
+					
 					.authenticationManager(authenticationManager)
 					.userDetailsService(userDetailsService)
 					;

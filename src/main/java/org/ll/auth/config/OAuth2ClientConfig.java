@@ -1,4 +1,4 @@
-package org.ll.auth_spring_boot_starter.config;
+package org.ll.auth.config;
 
 import javax.servlet.Filter;
 import javax.servlet.http.Cookie;
@@ -140,7 +140,8 @@ public class OAuth2ClientConfig extends WebSecurityConfigurerAdapter {
     
     @Bean
     @Primary
-    public UserInfoTokenServices tokenServices(){
+//    public UserInfoTokenServices tokenServices(){
+    public UserInfoTokenServices userInfoTokenServices(){
     	UserInfoTokenServices tokenServices = new UserInfoTokenServices(
     			apiResource().getUserInfoUri(), apiClient().getClientId());
     	tokenServices.setRestTemplate(restTemplate());
@@ -161,7 +162,7 @@ public class OAuth2ClientConfig extends WebSecurityConfigurerAdapter {
     	}
     	OAuth2ClientAuthenticationProcessingFilter filter = new OAuth2ClientAuthenticationProcessingFilter("/login");
     	filter.setRestTemplate(restTemplate());
-    	filter.setTokenServices(tokenServices());
+    	filter.setTokenServices(userInfoTokenServices());
     	  
     	SavedRequestAwareAuthenticationSuccessHandler handler = new SavedRequestAwareAuthenticationSuccessHandler();
     	handler.setAlwaysUseDefaultTargetUrl(false);

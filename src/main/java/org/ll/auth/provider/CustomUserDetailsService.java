@@ -1,4 +1,4 @@
-package org.ll.auth_spring_boot_starter.provider;
+package org.ll.auth.provider;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.ll.auth_spring_boot_starter.model.TmpUser;
-import org.ll.auth_spring_boot_starter.model.UserDetailProperties;
+import org.ll.auth.model.TmpUser;
+import org.ll.auth.model.UserDetailProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

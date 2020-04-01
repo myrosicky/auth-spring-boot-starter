@@ -1,4 +1,4 @@
-package org.ll.auth_spring_boot_starter.config;
+package org.ll.auth.config;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -13,8 +13,8 @@ import java.security.cert.CertificateException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.ll.auth_spring_boot_starter.model.JwtTokenProperties;
-import org.ll.auth_spring_boot_starter.model.KeystoreProperties;
+import org.ll.auth.model.JwtTokenProperties;
+import org.ll.auth.model.KeystoreProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,6 +29,7 @@ import org.springframework.security.jwt.crypto.sign.SignatureVerifier;
 import org.springframework.security.jwt.crypto.sign.Signer;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
+import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
@@ -56,6 +57,11 @@ public class TokenConfig {
 			Map<String, Object> info = new LinkedHashMap<>(accessToken.getAdditionalInformation());
 			info.put("haha", "valueInputByEnhancer");
 			result.setAdditionalInformation(info);
+			if(isDebug){
+				LOG.debug("tokenEnhancer - authentication:" + authentication);
+				LOG.debug("tokenEnhancer - authentication.getUserAuthentication():" + authentication.getUserAuthentication());
+				LOG.debug("tokenEnhancer - authentication.getDetails():" + authentication.getDetails());
+			}
 			return result;
 		};
  	} 
@@ -156,6 +162,7 @@ public class TokenConfig {
 	public DefaultTokenServices tokenServices(){
 		DefaultTokenServices tokenServices = new DefaultTokenServices();
 		tokenServices.setTokenStore(tokenStore());
+		tokenServices.setTokenEnhancer(tokenEnhancer());
 		tokenServices.setReuseRefreshToken(true);
 		return tokenServices;
 	}

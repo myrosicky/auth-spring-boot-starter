@@ -1,4 +1,4 @@
-package org.ll.auth_spring_boot_starter.model;
+package org.ll.auth.model;
 
 import lombok.Data;
 

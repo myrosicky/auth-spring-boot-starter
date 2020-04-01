@@ -1,4 +1,4 @@
-package org.ll.auth_spring_boot_starter.model;
+package org.ll.auth.model;
 
 import java.util.List;
 
@@ -9,5 +9,5 @@ import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 @Data
 public class Oauth2ClientDetailsProperties {
 
-	private List<BaseClientDetails> clients;
+	private List<CustomClientDetails> clients;
 }

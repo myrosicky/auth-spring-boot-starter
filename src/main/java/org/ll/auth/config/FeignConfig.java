@@ -1,6 +1,7 @@
-package org.ll.auth_spring_boot_starter.config;
+package org.ll.auth.config;
 
-import org.business.exceptions.CallApiException;
+import org.ll.auth.exception.CallApiException;
+import org.ll.auth.processor.feign.RequestBodyParameterProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -57,6 +58,12 @@ public class FeignConfig {
 				return new CallApiException(methodKey);
 		}
 	    ;
+	 }
+	 
+	 @Bean
+	 @ConditionalOnProperty("security.feign.custom-features.enabled")
+	 public RequestBodyParameterProcessor requestBodyParameterProcessor(){
+		 return new RequestBodyParameterProcessor();
 	 }
 	
 }
