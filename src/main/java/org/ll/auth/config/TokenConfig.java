@@ -10,6 +10,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.interfaces.RSAPublicKey;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -29,7 +30,6 @@ import org.springframework.security.jwt.crypto.sign.SignatureVerifier;
 import org.springframework.security.jwt.crypto.sign.Signer;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
-import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
@@ -37,7 +37,7 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
 
 @Configuration
-@ConditionalOnProperty("security.token.enabled")
+@ConditionalOnProperty("cloudms.security.token.enabled")
 @Order(1)
 public class TokenConfig {
 	
@@ -45,12 +45,13 @@ public class TokenConfig {
 	private boolean isDebug = LOG.isDebugEnabled();
 	
 	@Bean
-	@ConfigurationProperties("security.token.jwt")
+	@ConfigurationProperties("cloudms.security.token.jwt")
 	public JwtTokenProperties jwtTokenProperties(){
 		return new JwtTokenProperties();
 	}
 	
 	@Bean
+	@ConditionalOnProperty(value = "cloudms.security.token.servlet-features", matchIfMissing = true)
 	public TokenEnhancer tokenEnhancer(){
 		return (accessToken, authentication) -> {
 			DefaultOAuth2AccessToken result = new DefaultOAuth2AccessToken(accessToken); 
@@ -67,6 +68,7 @@ public class TokenConfig {
  	} 
 	
 	@Bean
+	@ConditionalOnProperty(value = "cloudms.security.token.servlet-features", matchIfMissing = true)
 	public JwtAccessTokenConverter tokenConverter(){
 		LOG.debug("init accessTokenConverter start");
 		JwtAccessTokenConverter jwtTokenEnhancer = new JwtAccessTokenConverter();
@@ -151,12 +153,14 @@ public class TokenConfig {
 	
 	@Bean
 	@Primary
+	@ConditionalOnProperty(value = "cloudms.security.token.servlet-features", matchIfMissing = true)
 	public TokenStore tokenStore(){
 		return new JwtTokenStore(tokenConverter());
 	}
 	
 	@Bean
 	@Primary
+	@ConditionalOnProperty(value = "cloudms.security.token.servlet-features", matchIfMissing = true)
 	// Making this primary to avoid any accidental duplication with other
 	// token service instance of the same name
 	public DefaultTokenServices tokenServices(){

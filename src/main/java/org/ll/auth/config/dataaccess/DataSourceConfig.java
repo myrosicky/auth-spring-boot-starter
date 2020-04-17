@@ -14,22 +14,22 @@ import org.springframework.core.annotation.Order;
 
 @Configuration
 @ConditionalOnMissingBean(DataSource.class)
-@ConditionalOnProperty("security.dataaccess.custom-datasource.enabled")
+@ConditionalOnProperty("cloudms.dataaccess.custom-datasource.enabled")
 @Order(99)
 public class DataSourceConfig {
 
 	private static final Logger log = LoggerFactory.getLogger(DataSourceConfig.class);
 	
-	@Value("${security.dataaccess.custom-datasource.driverClassName}")
+	@Value("${cloudms.dataaccess.custom-datasource.driverClassName}")
 	private String driverClassName;
 
-	@Value("${security.dataaccess.custom-datasource.url}")
+	@Value("${cloudms.dataaccess.custom-datasource.url}")
 	private String url;
 
-	@Value("${security.dataaccess.custom-datasource.username}")
+	@Value("${cloudms.dataaccess.custom-datasource.username}")
 	private String username;
 
-	@Value("${security.dataaccess.custom-datasource.password}")
+	@Value("${cloudms.dataaccess.custom-datasource.password}")
 	private String password;
 	
 	@Bean

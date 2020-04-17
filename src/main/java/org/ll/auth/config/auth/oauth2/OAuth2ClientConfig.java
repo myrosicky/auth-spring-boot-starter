@@ -1,9 +1,10 @@
-package org.ll.auth.config;
+package org.ll.auth.config.auth.oauth2;
 
 import javax.servlet.Filter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
+import org.ll.auth.config.auth.AuthConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,15 +25,17 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
-import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.client.resource.BaseOAuth2ProtectedResourceDetails;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 import org.springframework.security.oauth2.client.token.grant.password.ResourceOwnerPasswordResourceDetails;
+import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -40,11 +43,12 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 
 
 @Configuration
-@ConditionalOnProperty("security.client.oauth2.enabled")
+@ConditionalOnProperty("cloudms.security.client.oauth2.enabled")
 @ConditionalOnMissingBean({AuthConfig.class, OAuth2AuthorizationServerConfig.class})
 @EnableWebSecurity
 @EnableOAuth2Client
@@ -54,7 +58,7 @@ public class OAuth2ClientConfig extends WebSecurityConfigurerAdapter {
 	private static final Logger LOG = LoggerFactory.getLogger(OAuth2ClientConfig.class);
 	private boolean isDebug = LOG.isDebugEnabled();
 	
-	@Value("${security.login.success-url}") private String successUrl;
+	@Value("${cloudms.security.login.success-url}") private String successUrl;
 	
 
     @Override
@@ -103,6 +107,7 @@ public class OAuth2ClientConfig extends WebSecurityConfigurerAdapter {
 	        		.contentTypeOptions().disable()
 	        .and()
 	         	.addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class)
+	         	
             ;
     }
 
@@ -111,11 +116,11 @@ public class OAuth2ClientConfig extends WebSecurityConfigurerAdapter {
          web.ignoring().antMatchers("/resources/**", "/static/**", "/webjars/**", "/images/**"); 
     } 
     
-    @Value("${security.client.oauth2.resource-details.client.grantType}") private String grantType;
+    @Value("${cloudms.security.client.oauth2.resource-details.client.grantType}") private String grantType;
      
 
     @Bean
-    @ConfigurationProperties("security.client.oauth2.resource-details.client")
+    @ConfigurationProperties("cloudms.security.client.oauth2.resource-details.client")
     public OAuth2ProtectedResourceDetails apiClient() {
     	LOG.debug("grantType:" + grantType);
     	if("password".equalsIgnoreCase(grantType)){
@@ -132,7 +137,7 @@ public class OAuth2ClientConfig extends WebSecurityConfigurerAdapter {
     
     @Bean
     @Primary
-    @ConfigurationProperties("security.client.oauth2.resource-details.resource")
+    @ConfigurationProperties("cloudms.security.client.oauth2.resource-details.resource")
     public ResourceServerProperties apiResource() {
     	LOG.debug("api.resource init start");
     	return new ResourceServerProperties();
@@ -181,4 +186,7 @@ public class OAuth2ClientConfig extends WebSecurityConfigurerAdapter {
     	return builder
     	.configure(new OAuth2RestTemplate(apiClient(), oauth2ClientContext));
     }
+	
+	
+	
 }

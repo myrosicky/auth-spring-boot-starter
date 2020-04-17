@@ -1,4 +1,4 @@
-package org.ll.auth.config;
+package org.ll.auth.config.auth.oauth2;
 
 import org.ll.auth.model.AuthorizeReqProperties;
 import org.ll.auth.util.AntMatcherUtil;
@@ -15,6 +15,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
@@ -23,18 +24,19 @@ import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 
 @Configuration
-@ConditionalOnProperty("security.resource.enabled")
+@ConditionalOnProperty("cloudms.security.resource.enabled")
 @EnableWebSecurity
+//@EnableWebFluxSecurity
 @Order(4)
 public class OAuth2ResourceServerConfig extends WebSecurityConfigurerAdapter {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OAuth2ResourceServerConfig.class);
 	private boolean isDebug = LOG.isDebugEnabled();
 
-	@Value("${security.resource.resource-id}") private String resourceIdGateway;
+	@Value("${cloudms.security.resource.resource-id}") private String resourceIdGateway;
 	
 	@Bean
-	@ConfigurationProperties("security.resource.authorize-request")
+	@ConfigurationProperties("cloudms.security.resource.authorize-request")
 	public AuthorizeReqProperties authorizeReqProperties(){
 		return new AuthorizeReqProperties();
 	}

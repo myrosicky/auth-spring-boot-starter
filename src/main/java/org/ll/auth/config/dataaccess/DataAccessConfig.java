@@ -22,8 +22,8 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
-@ImportResource({"${security.dataaccess.jpa.import-resource}"})
-@ConditionalOnProperty("security.dataaccess.jpa.enabled")
+@ImportResource({"${cloudms.dataaccess.jpa.import-resource}"})
+@ConditionalOnProperty("cloudms.dataaccess.jpa.enabled")
 public class DataAccessConfig {
 	
 	private final static Logger log = LoggerFactory.getLogger(DataAccessConfig.class);
@@ -32,13 +32,13 @@ public class DataAccessConfig {
 	@Autowired
 	private DataSource dataSource;
 	
-	@Value("${security.dataaccess.jpa.hibernate.ddl-auto}")
+	@Value("${cloudms.dataaccess.jpa.hibernate.ddl-auto}")
 	private String ddlAuto;
 	
-	@Value("${security.dataaccess.jpa.hibernate.packageToScan}")
+	@Value("${cloudms.dataaccess.jpa.hibernate.packageToScan}")
 	private String packageToScan;
 
-	@Value("${security.dataaccess.jpa.hibernate.dialect}")
+	@Value("${cloudms.dataaccess.jpa.hibernate.dialect}")
 	private String dialect;
 	
 	@Bean
@@ -73,7 +73,7 @@ public class DataAccessConfig {
 	
 	@Bean
 	@Primary
-	@ConditionalOnProperty("security.dataaccess.jpa.create-transaction-manager")
+	@ConditionalOnProperty("cloudms.dataaccess.jpa.create-transaction-manager")
 	public PlatformTransactionManager transactionManager() {
 		JpaTransactionManager txManager = new JpaTransactionManager();
 		txManager.setEntityManagerFactory(entityManagerFactory());

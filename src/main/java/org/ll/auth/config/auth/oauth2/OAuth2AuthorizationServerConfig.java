@@ -1,4 +1,4 @@
-package org.ll.auth.config;
+package org.ll.auth.config.auth.oauth2;
 
 import java.util.stream.Collectors;
 
@@ -29,7 +29,7 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 @Configuration
-@ConditionalOnProperty("security.auth.oauth2.enabled")
+@ConditionalOnProperty("cloudms.security.auth.oauth2.enabled")
 @Order(3)
 public class OAuth2AuthorizationServerConfig extends WebSecurityConfigurerAdapter {
 
@@ -39,7 +39,7 @@ public class OAuth2AuthorizationServerConfig extends WebSecurityConfigurerAdapte
 	
 	@Configuration
 	@EnableAuthorizationServer
-	@ConditionalOnProperty("security.auth.oauth2.enabled")
+	@ConditionalOnProperty("cloudms.security.auth.oauth2.enabled")
 	public static class AuthorizationServer extends AuthorizationServerConfigurerAdapter {
 
 		@Autowired private TokenStore tokenStore;
@@ -53,7 +53,7 @@ public class OAuth2AuthorizationServerConfig extends WebSecurityConfigurerAdapte
 		@Autowired private TokenEnhancer tokenEnhancer;
 		
 		@Bean
-		@ConfigurationProperties("security.auth.oauth2.client-details")
+		@ConfigurationProperties("cloudms.security.auth.oauth2.client-details")
 		public Oauth2ClientDetailsProperties oauth2ClientDetailsProperties(){
 			return new Oauth2ClientDetailsProperties();
 		}

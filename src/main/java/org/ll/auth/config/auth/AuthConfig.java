@@ -1,4 +1,4 @@
-package org.ll.auth.config;
+package org.ll.auth.config.auth;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@ConditionalOnProperty("security.auth.enabled")
+@ConditionalOnProperty("cloudms.security.auth.enabled")
 @Order(1)
 public class AuthConfig  extends WebSecurityConfigurerAdapter{
 
@@ -58,7 +58,7 @@ public class AuthConfig  extends WebSecurityConfigurerAdapter{
 	}
 	
 	@Bean
-	@ConfigurationProperties("security.auth.in-memory.user-detail")
+	@ConfigurationProperties("cloudms.security.auth.in-memory.user-detail")
     public UserDetailProperties userDetailsProperties() {
 		return new UserDetailProperties();
 	}
@@ -94,7 +94,7 @@ public class AuthConfig  extends WebSecurityConfigurerAdapter{
 	}
 	
 	@Bean
-	@ConfigurationProperties("security.auth.authorize-request")
+	@ConfigurationProperties("cloudms.security.auth.authorize-request")
 	@Nullable
 	public AuthorizeReqProperties authorizeReqProperties(){
 		return new AuthorizeReqProperties();
@@ -111,6 +111,9 @@ public class AuthConfig  extends WebSecurityConfigurerAdapter{
 			AntMatcherUtil.setAuthorizeRequests(http.authorizeRequests(), authorizeReqProperties);
 		}
 		http
+			.formLogin()
+				.permitAll()
+			.and()
 				.csrf().ignoringAntMatchers("/login**")
 			.and()
 				.sessionManagement()
