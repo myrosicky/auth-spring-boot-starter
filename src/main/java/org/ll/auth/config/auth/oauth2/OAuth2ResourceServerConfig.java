@@ -6,6 +6,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Resource;
 
@@ -18,13 +20,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -33,14 +37,21 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity.AuthorizeExchangeSpec;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
+import org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.BearerTokenError;
+import org.springframework.security.oauth2.server.resource.BearerTokenErrorCodes;
+import org.springframework.security.oauth2.server.resource.web.server.ServerBearerTokenAuthenticationConverter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.WebFilter;
+
+import reactor.core.publisher.Mono;
 
 @Configuration
 @ConditionalOnProperty("cloudms.security.resource.enabled")
@@ -157,6 +168,7 @@ public class OAuth2ResourceServerConfig
 			spec
 			.anyExchange().authenticated()
 			.and()
+				.addFilterAt(webFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 				.oauth2ResourceServer()
 					.jwt()
 					.publicKey(publicKey())
@@ -165,15 +177,55 @@ public class OAuth2ResourceServerConfig
 			return http.build();
 		}
 		
-//		WebFilter filter = (exchange, chain) -> {
-//					ReactiveSecurityContextHolder.getContext()
-//					.filter(c -> {
-//						log.debug("c.getAuthentication(): [{}]", c.getAuthentication());
-//						return c.getAuthentication() != null;
-//					})
-//					;
-//					return chain.filter(exchange);
-//		};
+		WebFilter webFilter = (exchange, chain) -> {
+			log.debug("enter custom filter");
+			exchange.getRequest().getHeaders().forEach((k, v) -> log.debug("header: [{}={}]", k, v));
+			Pattern authorizationPattern = Pattern.compile("^Bearer (?<token>[a-zA-Z0-9-._~+/]+)=*$");
+			String authorization = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+			String tokenInReq = null;
+			log.debug("authorization: [{}]", authorization);
+			if(StringUtils.hasText(authorization)){
+				log.debug("authorization.startsWith(\"Bearer\"): [{}]", authorization.startsWith("Bearer"));
+			}
+			
+			if (StringUtils.hasText(authorization) && authorization.startsWith("Bearer")) {
+				Matcher matcher = authorizationPattern.matcher(authorization);
+				
+				if ( !matcher.matches() ) {
+					BearerTokenError error = new BearerTokenError(BearerTokenErrorCodes.INVALID_TOKEN,
+							HttpStatus.BAD_REQUEST,
+							"Bearer token is malformed",
+							"https://tools.ietf.org/html/rfc6750#section-3.1");
+					throw new OAuth2AuthenticationException(error);
+				}
+
+				tokenInReq  = matcher.group("token");
+			}
+			log.debug("tokenInReq: [{}]", tokenInReq);
+//			Mono<Authentication>  token = new ServerBearerTokenAuthenticationConverter().convert(exchange);
+//			log.debug("token: [{}]", token);
+
+			Mono.justOrEmpty(tokenInReq)
+				.map(BearerTokenAuthenticationToken::new)
+//				.cast(BearerTokenAuthenticationToken.class)
+				.flatMap(t -> {
+					log.debug("t: [{}]", t);
+					log.debug("t.getToken(): [{}]", t.getToken());
+					log.debug("t.getAuthorities(): [{}]", t.getAuthorities());
+					Mono<org.springframework.security.oauth2.jwt.Jwt>  jwt = new org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder(publicKey()).decode(t.getToken());
+					jwt.flatMap(j -> {
+						log.debug("j: [{}]", j);
+						AbstractAuthenticationToken finalToken = new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter().convert(j);
+						log.debug("finalToken.getAuthorities(): [{}]", finalToken.getAuthorities());
+						log.debug("finalToken: [{}]", finalToken);
+						return Mono.empty();
+					})
+					;
+					return Mono.empty();
+				})
+				;
+			return chain.filter(exchange);
+		};
 		
 		
 		public RSAPublicKey publicKey(){

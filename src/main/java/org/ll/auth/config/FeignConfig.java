@@ -23,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -50,7 +51,7 @@ public class FeignConfig {
 		LOG.debug("init custom oauth2RequestInterceptor");
 		return (template) -> template.header(HttpHeaders.AUTHORIZATION, 
 						String.format("%s %s", 
-								oauth2ClientContext.getAccessToken() != null? oauth2ClientContext.getAccessToken().getTokenType():"", 
+								OAuth2AccessToken.BEARER_TYPE, 
 								oauth2ClientContext.getAccessToken() != null? oauth2ClientContext.getAccessToken().getValue():""
 						)
 					)
@@ -97,7 +98,8 @@ public class FeignConfig {
 	 						;
 	 				MultiValueMap<String, String> headers = 
 								CollectionUtils.toMultiValueMap(
-								 (Map<String, List<String>>)req.headers().entrySet().stream().collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().stream().collect(Collectors.toList())))
+								 (Map<String, List<String>>)req.headers().entrySet().stream().collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().stream().collect(Collectors.toList())
+									 ))
 								)
 						;
 	 				Mono<ClientResponse> resp = null;
