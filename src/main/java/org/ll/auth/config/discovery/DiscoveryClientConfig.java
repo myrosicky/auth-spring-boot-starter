@@ -1,4 +1,4 @@
-package org.ll.auth.config;
+package org.ll.auth.config.discovery;
 
 import java.util.HashMap;
 import java.util.Map;

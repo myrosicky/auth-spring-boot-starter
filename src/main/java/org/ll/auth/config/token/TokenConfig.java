@@ -1,4 +1,4 @@
-package org.ll.auth.config;
+package org.ll.auth.config.token;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;

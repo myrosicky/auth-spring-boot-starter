@@ -1,4 +1,4 @@
-package org.ll.auth.config;
+package org.ll.auth.config.feign;
 
 import java.time.Duration;
 import java.util.List;
@@ -26,10 +26,13 @@ import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import reactor.core.publisher.Mono;
 import feign.Client;
@@ -51,7 +54,7 @@ public class FeignConfig {
 		LOG.debug("init custom oauth2RequestInterceptor");
 		return (template) -> template.header(HttpHeaders.AUTHORIZATION, 
 						String.format("%s %s", 
-								OAuth2AccessToken.BEARER_TYPE, 
+								oauth2ClientContext.getAccessToken() != null && StringUtils.hasText(oauth2ClientContext.getAccessToken().getTokenType())? OAuth2AccessToken.BEARER_TYPE:"", 
 								oauth2ClientContext.getAccessToken() != null? oauth2ClientContext.getAccessToken().getValue():""
 						)
 					)
@@ -77,8 +80,8 @@ public class FeignConfig {
 	 
 	 @Bean
 	 @ConditionalOnProperty("cloudms.feign.custom-features.enabled")
-	 public RequestBodyParameterProcessor requestBodyParameterProcessor(){
-		 return new RequestBodyParameterProcessor();
+	 public RequestBodyParameterProcessor requestBodyParameterProcessor(ObjectMapper jacksonObjectMapper){
+		 return new RequestBodyParameterProcessor(jacksonObjectMapper);
 	 }
 
 	 @Bean

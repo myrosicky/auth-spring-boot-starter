@@ -31,6 +31,12 @@ public class RequestBodyParameterProcessor implements
 	
 	private static final Class<LLRequestBody> ANNOTATION = LLRequestBody.class;
 	
+	private ObjectMapper jacksonObjectMapper;
+	
+	public RequestBodyParameterProcessor(ObjectMapper jacksonObjectMapper){
+		this.jacksonObjectMapper = jacksonObjectMapper;
+	}
+	
 	@Override
 	public Class<? extends Annotation> getAnnotationType() {
 		return ANNOTATION;
@@ -86,7 +92,18 @@ public class RequestBodyParameterProcessor implements
 	}
 	
 	
-	private Expander jsonExpander = JSON::toJSONString;
+//	private Expander jsonExpander = JSON::toJSONString;
+	private Expander jsonExpander = str -> {
+		log.debug("str: [{}]", str);
+		try{
+			return jacksonObjectMapper.writeValueAsString(str);
+		}catch(Exception e){
+			log.error("failt to parse json["+str+"] to string", e);
+		}
+		return str.toString();
+	};
+	
+	
 	
 	private void nameParam(MethodMetadata data, String name, int i) {
 	      Collection<String> names =
