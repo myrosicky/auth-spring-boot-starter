@@ -24,64 +24,63 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.server.WebFilter;
 
-@EnableWebFluxSecurity
-@ConditionalOnProperty("cloudms.gateway.spring-cloud.security.enabled")
-public class GateWayReactiveSecurConfig  {
-
-	private final static Logger log = LoggerFactory.getLogger(GateWayReactiveSecurConfig.class);
-
-	@Resource private JwtTokenProperties jwtTokenProperties;
+//@EnableWebFluxSecurity
+//@ConditionalOnProperty("cloudms.gateway.spring-cloud.security.enabled")
+//public class GateWayReactiveSecurConfig  {
+//
+//	private final static Logger log = LoggerFactory.getLogger(GateWayReactiveSecurConfig.class);
+//
+//	@Resource private JwtTokenProperties jwtTokenProperties;
+////	@Bean
+////	@ConfigurationProperties("cloudms.security.token.jwt")
+////	public JwtTokenProperties jwtTokenProperties(){
+////		return new JwtTokenProperties();
+////	}
+//	
 //	@Bean
-//	@ConfigurationProperties("cloudms.security.token.jwt")
-//	public JwtTokenProperties jwtTokenProperties(){
-//		return new JwtTokenProperties();
+//	public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) throws Exception {
+//		log.debug("init springSecurityFilterChain");
+//		
+//		http
+//			.authorizeExchange()
+//				.pathMatchers("/actuator/**").permitAll()
+//				.pathMatchers("/v1/api/**").hasAuthority("SCOPE_message:read")
+////				.pathMatchers("/v1/api/**").hasRole("USER")
+//				.anyExchange().authenticated()
+//			.and()
+//			.addFilterAt(filter, SecurityWebFiltersOrder.AUTHENTICATION)
+//			.oauth2ResourceServer()
+//				.jwt()
+//				.publicKey(publicKey())
+//				;
+//		return http.build();
 //	}
-	
-	@Bean
-	public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) throws Exception {
-		log.debug("init springSecurityFilterChain");
-		
-		http
-			.authorizeExchange()
-				.pathMatchers("/actuator/**").permitAll()
-				.pathMatchers("/v1/api/me").hasAuthority("SCOPE_message:read")
-				.pathMatchers("/v1/api/menus").hasAuthority("SCOPE_message:read")
-//				.pathMatchers("/v1/api/**").hasRole("USER")
-				.anyExchange().authenticated()
-			.and()
-			.addFilterAt(filter, SecurityWebFiltersOrder.AUTHENTICATION)
-			.oauth2ResourceServer()
-				.jwt()
-				.publicKey(publicKey())
-				;
-		return http.build();
-	}
-	
-	WebFilter filter = (exchange, chain) -> {
-				ReactiveSecurityContextHolder.getContext()
-				.filter(c -> {
-					log.debug("c.getAuthentication(): [{}]", c.getAuthentication());
-					return c.getAuthentication() != null;
-				})
-				;
-				return chain.filter(exchange);
-	};
-	
-	
-	public RSAPublicKey publicKey(){
-		log.debug("init public key");
-		try {
-			KeystoreProperties verifier = jwtTokenProperties.getVerifier();
-			KeyStore keystore = KeyStore.getInstance(verifier.getKeyStoreType());
-			keystore.load(new ClassPathResource(verifier.getKeyStore()).getInputStream(), verifier.getKeyStorePwd().toCharArray());
-			RSAPublicKey key = (RSAPublicKey)keystore.getCertificate(verifier.getKeyAlias()).getPublicKey();
-			log.debug("key.getEncoded(): [{}]", Hex.toHexString(key.getEncoded()));
-			return key;
-		} catch (KeyStoreException
-				| NoSuchAlgorithmException | CertificateException | IOException e) {
-			log.error("fail to get public key", e);
-		}
-		return null;
-	}
-	
-}
+//	
+//	WebFilter filter = (exchange, chain) -> {
+//				ReactiveSecurityContextHolder.getContext()
+//				.filter(c -> {
+//					log.debug("c.getAuthentication(): [{}]", c.getAuthentication());
+//					return c.getAuthentication() != null;
+//				})
+//				;
+//				return chain.filter(exchange);
+//	};
+//	
+//	
+//	public RSAPublicKey publicKey(){
+//		log.debug("init public key");
+//		try {
+//			KeystoreProperties verifier = jwtTokenProperties.getVerifier();
+//			KeyStore keystore = KeyStore.getInstance(verifier.getKeyStoreType());
+//			keystore.load(new ClassPathResource(verifier.getKeyStore()).getInputStream(), verifier.getKeyStorePwd().toCharArray());
+//			RSAPublicKey key = (RSAPublicKey)keystore.getCertificate(verifier.getKeyAlias()).getPublicKey();
+//			log.debug("key.getEncoded(): [{}]", Hex.toHexString(key.getEncoded()));
+//			return key;
+//		} catch (KeyStoreException
+//				| NoSuchAlgorithmException | CertificateException | IOException e) {
+//			log.error("fail to get public key", e);
+//		}
+//		return null;
+//	}
+//	
+//}

@@ -11,11 +11,12 @@ public class MatcherProperties {
 	private String pattern;
 	private String attribute;
 	private String type;
-	private String httpMethod;
+	private HttpMethod httpMethod;
+	private String hasAuthority;
 	
-	public HttpMethod getMethod(){
-		return HttpMethod.valueOf(StringUtils.uncapitalize(httpMethod));
-	}
+//	public HttpMethod getMethod(){
+//		return HttpMethod.valueOf(StringUtils.uncapitalize(httpMethod));
+//	}
 	
 	
 }
