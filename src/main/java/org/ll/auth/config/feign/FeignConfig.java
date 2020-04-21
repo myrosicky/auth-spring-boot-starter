@@ -1,9 +1,11 @@
 package org.ll.auth.config.feign;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
 
 import org.ll.auth.exception.CallApiException;
 import org.ll.auth.processor.feign.RequestBodyParameterProcessor;
@@ -26,15 +28,19 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
+import org.springframework.web.reactive.function.BodyExtractor;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
+
 import reactor.core.publisher.Mono;
+
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+
 
 import feign.Client;
 import feign.Request.HttpMethod;
@@ -67,7 +73,9 @@ public class FeignConfig {
 	 @Lazy
 	 public ErrorDecoder errorDecoder(final OAuth2RestTemplate restTemplate) {
 	     return (methodKey, response) ->{
-	    		 LOG.debug("response.status(): [{}]", response.status());
+	    	 	LOG.info("response.status(): [{}]", response.status());
+	    	 	LOG.info("response.body(): [{}]", response.body());
+    		 
 				if(response.status() == HttpStatus.UNAUTHORIZED.value()){
 					LOG.debug("refresh token now");
 					restTemplate.getAccessToken();
@@ -102,7 +110,7 @@ public class FeignConfig {
 	 				LOG.debug("init custom reactive http client");
 	 				WebClient delegate = WebClient.builder()
 //	 						.filter(logRequest())
-	 						.filter(logResponse())
+//	 						.filter(logResponse())
 	 						.baseUrl(req.url())
 	 						.build()
 	 						;
@@ -134,10 +142,14 @@ public class FeignConfig {
 	 				
 	 				ClientResponse respBlock = resp.block();
 	 				LOG.debug("respBlock: [{}]", respBlock);
-	 				
+	 				String respBody = respBlock.bodyToMono(String.class).block();
+	 				LOG.debug("resp statusCode: {}", respBlock.statusCode());
+	 				LOG.debug("resp headers:");
+	 				respBlock.headers().asHttpHeaders().entrySet().forEach(e -> LOG.debug("{} = {}", e.getKey(), e.getValue()));
+	 				LOG.debug("resp body: {}", respBody);
 	 				return feign.Response.builder()
 	 						.status(respBlock.statusCode().value())
-	 						.body(respBlock.bodyToMono(String.class).block(), feign.Util.UTF_8) // json body
+	 						.body(respBody, feign.Util.UTF_8) 
 	 						.request(req)
 	 						.headers(respBlock.headers().asHttpHeaders().entrySet().stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
 	 						.build()
@@ -145,22 +157,34 @@ public class FeignConfig {
 		 		}, cachingFactory, clientFactory);
 	 }
 	 
-	 private ExchangeFilterFunction logRequest() {
-		    return (clientRequest, next) -> {
-		    	LOG.info("Request: {} {}", clientRequest.method(), clientRequest.url());
-		        clientRequest.headers()
-		                .forEach((name, values) -> values.forEach(value -> LOG.info("{}={}", name, value)));
-		        LOG.info("cookies: {}", clientRequest.cookies());
-		        return next.exchange(clientRequest);
-		    };
-		}
-	 
-	 private ExchangeFilterFunction logResponse() {
-		    return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
-		    	LOG.info("Response: {}", clientResponse);
-		        return Mono.just(clientResponse);
-		    });
-		}
+//	 private ExchangeFilterFunction logRequest() {
+//		    return (clientRequest, next) -> {
+//		    	LOG.info("Request: {} {}", clientRequest.method(), clientRequest.url());
+//		        clientRequest.headers()
+//		                .forEach((name, values) -> values.forEach(value -> LOG.info("{}={}", name, value)));
+//		        LOG.info("cookies: {}", clientRequest.cookies());
+//		        return next.exchange(clientRequest);
+//		    };
+//		}
+//	 
+//	 private ExchangeFilterFunction logResponse() {
+//		    return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
+//		    	LOG.debug("clientResponse: {}", clientResponse);
+//		    	LOG.debug("clientResponse.statusCode(): {}", clientResponse.statusCode());
+//		    	LOG.debug("clientResponse.statusCode(): {}", clientResponse.body((msg, ctx) -> {
+//		    		
+//		    		return null;
+//		    	}));
+//		    	 
+//		    	clientResponse
+//		    		.bodyToMono(String.class)
+//		    		.flatMap(b -> {
+//		    			LOG.info("resp body: {}", b); 
+//		    			return Mono.just(b);
+//		    			});
+//		        return Mono.just(clientResponse);
+//		    });
+//		}
 	 
 	
 }

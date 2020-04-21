@@ -28,6 +28,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -37,16 +38,16 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity.AuthorizeExchangeSpec;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.config.web.server.ServerHttpSecurity.OAuth2ResourceServerSpec.JwtSpec;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 import org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.BearerTokenError;
 import org.springframework.security.oauth2.server.resource.BearerTokenErrorCodes;
-import org.springframework.security.oauth2.server.resource.web.server.ServerBearerTokenAuthenticationConverter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.WebFilter;
@@ -130,7 +131,7 @@ public class OAuth2ResourceServerConfig
 
 		private final static Logger log = LoggerFactory.getLogger(ResourceServerReactiveSecurConfig.class);
 
-		@Resource private JwtTokenProperties jwtTokenProperties;
+		@Nullable @Autowired private JwtTokenProperties jwtTokenProperties;
 		
 		@Resource private AuthorizeReqProperties authorizeReqProperties;
 //		@Bean
@@ -165,14 +166,23 @@ public class OAuth2ResourceServerConfig
 					spec.pathMatchers(m.getPattern()).hasAuthority(m.getHasAuthority());
 				}
 			});
+			JwtSpec jwtSpec = 
 			spec
 			.anyExchange().authenticated()
 			.and()
-				.addFilterAt(webFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-				.oauth2ResourceServer()
+			.csrf()
+				.disable()
+			.addFilterAt(webFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+			.oauth2ResourceServer()
 					.jwt()
-					.publicKey(publicKey())
+//					.publicKey(publicKey())
 					;
+			RSAPublicKey pubKey = publicKey();
+			if(pubKey != null){
+				jwtSpec.publicKey(pubKey);
+			}else{
+				jwtSpec.jwtDecoder(blankDecoder);
+			}
 			
 			return http.build();
 		}
@@ -227,9 +237,13 @@ public class OAuth2ResourceServerConfig
 			return chain.filter(exchange);
 		};
 		
+		public ReactiveJwtDecoder blankDecoder = token -> Mono.just(null);
 		
 		public RSAPublicKey publicKey(){
 			log.debug("init public key");
+			if(jwtTokenProperties == null){
+				return null;
+			}
 			log.debug("jwtTokenProperties: {}", jwtTokenProperties);
 			try {
 				KeystoreProperties verifier = jwtTokenProperties.getVerifier();
