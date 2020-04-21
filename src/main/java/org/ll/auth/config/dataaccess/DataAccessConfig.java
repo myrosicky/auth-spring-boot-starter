@@ -28,7 +28,6 @@ public class DataAccessConfig {
 	
 	private final static Logger log = LoggerFactory.getLogger(DataAccessConfig.class);
 	
-	
 	@Autowired
 	private DataSource dataSource;
 	

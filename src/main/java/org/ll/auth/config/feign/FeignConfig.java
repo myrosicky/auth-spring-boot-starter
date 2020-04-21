@@ -1,6 +1,5 @@
 package org.ll.auth.config.feign;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,9 +31,11 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import reactor.core.publisher.Mono;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 import feign.Client;
 import feign.Request.HttpMethod;
 import feign.RequestInterceptor;
@@ -80,6 +81,13 @@ public class FeignConfig {
 	 
 	 @Bean
 	 @ConditionalOnProperty("cloudms.feign.custom-features.enabled")
+	 public ObjectMapper cusstomJacksonObjectMapper(ObjectMapper jacksonObjectMapper){
+		 jacksonObjectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		 return jacksonObjectMapper;
+	 }
+	 
+	 @Bean
+	 @ConditionalOnProperty("cloudms.feign.custom-features.enabled")
 	 public RequestBodyParameterProcessor requestBodyParameterProcessor(ObjectMapper jacksonObjectMapper){
 		 return new RequestBodyParameterProcessor(jacksonObjectMapper);
 	 }
@@ -93,10 +101,9 @@ public class FeignConfig {
 	 			(req, opts) -> {
 	 				LOG.debug("init custom reactive http client");
 	 				WebClient delegate = WebClient.builder()
-	 						.filter(logRequest())
+//	 						.filter(logRequest())
 	 						.filter(logResponse())
 	 						.baseUrl(req.url())
-//	 						.create(req.url())
 	 						.build()
 	 						;
 	 				MultiValueMap<String, String> headers = 
@@ -105,6 +112,10 @@ public class FeignConfig {
 									 ))
 								)
 						;
+	 				LOG.info("Request: {} {}", req.method(), req.url());
+	 				req.headers().forEach((name, values) -> values.forEach(value -> LOG.info("{}={}", name, value)));
+			        LOG.info("body: {}", req.requestBody().asString());
+	        
 	 				Mono<ClientResponse> resp = null;
 
 	 				if(HttpMethod.GET==req.httpMethod()){
@@ -113,15 +124,15 @@ public class FeignConfig {
 		 					.exchange()
 	 					;
 	 				}else if(HttpMethod.POST==req.httpMethod()){
+	 					LOG.debug("req.requestBody(): [{}]", req.requestBody());
 	 					resp = delegate.post()
 		 					.headers(h -> h.addAll(headers))
-		 					.body(BodyInserters.fromObject(req.requestBody()))
+		 					.body(Mono.just(req.requestBody().asString()), String.class)
 		 					.exchange()
 	 					;
 	 				}
-//	 				ClientResponse respBlock = resp.bodyToMono(ClientResponse.class).block();
-	 				ClientResponse respBlock = resp.block(Duration.ofSeconds(2));
 	 				
+	 				ClientResponse respBlock = resp.block();
 	 				LOG.debug("respBlock: [{}]", respBlock);
 	 				
 	 				return feign.Response.builder()
@@ -139,6 +150,7 @@ public class FeignConfig {
 		    	LOG.info("Request: {} {}", clientRequest.method(), clientRequest.url());
 		        clientRequest.headers()
 		                .forEach((name, values) -> values.forEach(value -> LOG.info("{}={}", name, value)));
+		        LOG.info("cookies: {}", clientRequest.cookies());
 		        return next.exchange(clientRequest);
 		    };
 		}

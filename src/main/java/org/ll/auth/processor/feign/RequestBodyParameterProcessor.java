@@ -12,8 +12,6 @@ import org.springframework.cloud.openfeign.AnnotatedParameterProcessor;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson.JSON;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import feign.MethodMetadata;
@@ -32,6 +30,7 @@ public class RequestBodyParameterProcessor implements
 	private static final Class<LLRequestBody> ANNOTATION = LLRequestBody.class;
 	
 	private ObjectMapper jacksonObjectMapper;
+	
 	
 	public RequestBodyParameterProcessor(ObjectMapper jacksonObjectMapper){
 		this.jacksonObjectMapper = jacksonObjectMapper;
@@ -93,14 +92,13 @@ public class RequestBodyParameterProcessor implements
 	
 	
 //	private Expander jsonExpander = JSON::toJSONString;
-	private Expander jsonExpander = str -> {
-		log.debug("str: [{}]", str);
+	private Expander jsonExpander = obj -> {
 		try{
-			return jacksonObjectMapper.writeValueAsString(str);
+			 return jacksonObjectMapper.writeValueAsString(obj);
 		}catch(Exception e){
-			log.error("failt to parse json["+str+"] to string", e);
+			log.error("failt to parse json["+obj+"] to string", e);
 		}
-		return str.toString();
+		return obj.toString();
 	};
 	
 	
