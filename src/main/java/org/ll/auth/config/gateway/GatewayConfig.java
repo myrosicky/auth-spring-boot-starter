@@ -13,8 +13,11 @@ import javax.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.gateway.config.HttpClientProperties;
+import org.springframework.cloud.gateway.discovery.DiscoveryClientRouteDefinitionLocator;
 import org.springframework.cloud.gateway.discovery.DiscoveryLocatorProperties;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.filter.factory.RewritePathGatewayFilterFactory;
@@ -40,6 +43,15 @@ public class GatewayConfig {
 //		);
 //	} 
 
+
+	@Bean
+	@ConditionalOnBean(DiscoveryClient.class)
+	@ConditionalOnProperty(name = "cloudms.gateway.spring-cloud.discovery.enabled")
+	public DiscoveryClientRouteDefinitionLocator customDiscoveryClientRouteDefinitionLocator(
+			DiscoveryClient discoveryClient, DiscoveryLocatorProperties properties) {
+		return new DiscoveryClientRouteDefinitionLocator(discoveryClient, properties);
+	}
+	
 	@Bean
 	@Primary
 	@ConditionalOnProperty("cloudms.gateway.spring-cloud.discovery.enabled")
