@@ -46,6 +46,8 @@ public class GatewayConfig {
 	public DiscoveryLocatorProperties customDiscoveryLocatorProperties() {
 		log.debug("init custom discoveryLocatorProperties");
 		DiscoveryLocatorProperties properties = new DiscoveryLocatorProperties();
+		properties.setEnabled(true);
+		
 //		properties.setPredicates(GatewayDiscoveryClientAutoConfiguration.initPredicates());
 //		properties.setFilters(GatewayDiscoveryClientAutoConfiguration.initFilters());
 		properties.setPredicates(new ArrayList<PredicateDefinition>());
