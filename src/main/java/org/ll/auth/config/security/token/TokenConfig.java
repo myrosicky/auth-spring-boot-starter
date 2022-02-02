@@ -1,4 +1,4 @@
-package org.ll.auth.config.token;
+package org.ll.auth.config.security.token;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -10,7 +10,6 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.interfaces.RSAPublicKey;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
