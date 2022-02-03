@@ -42,8 +42,9 @@ public class ReactiveConfig {
                 b.GET(path.getUri(), req -> {
                     Map<String, String> headers = req.headers().asHttpHeaders().entrySet().stream().collect(Collectors.toMap(
                             Map.Entry::getKey, e-> String.join(",", e.getValue())));
-                    Object reqVO = ClassUtils.forName(webConfigProperties.getReqVO(), ClassUtils.getDefaultClassLoader());
-                    om.convertValue(headers, reqVO.getClass());
+//                    Object reqVO = ClassUtils.forName(webConfigProperties.getReqVO(), ClassUtils.getDefaultClassLoader());
+//                    reqVO = om.convertValue(headers, reqVO.getClass());
+//                    path.getControllerFunc();
                 });
             }
 
