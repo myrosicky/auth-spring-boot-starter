@@ -1,0 +1,15 @@
+# refer: https://docs.spring.io/spring-cloud-stream-binder-kafka/docs/1.1.0.M1/reference/htmlsingle/
+# producer and consumer
+spring.cloud.stream:
+  kafka:
+    binder:
+      brokers: localhost:9092
+
+# consumer
+    bindings:
+      channel1.consumer:
+        recoveryInterval: 5000  # 5s
+# producer
+      channel1.producer:
+        sync: false
+
