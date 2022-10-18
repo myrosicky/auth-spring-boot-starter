@@ -41,9 +41,9 @@ public class AuthConfig  extends WebSecurityConfigurerAdapter{
 	
 	@Bean
 	@ConditionalOnMissingBean(AuthenticationProvider.class)
-	public UserPasswordProvider userPasswordProvider(){
+	public UserPasswordProvider userPasswordProvider(UserDetailProperties userDetailsProperties, PasswordEncoder passwordEncoder){
 		log.debug("init default userPasswordProvider");
-		return new UserPasswordProvider(userDetailsProperties(), passwordEncoder());
+		return new UserPasswordProvider(userDetailsProperties, passwordEncoder);
 	}
 	
 	@Autowired @Nullable private List<AuthenticationProvider> authenticationProviders;
